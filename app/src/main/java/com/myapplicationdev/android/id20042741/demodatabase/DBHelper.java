@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import java.sql.Array;
 import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
@@ -25,6 +26,11 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String COLUMN_ID = "_id";
     private static final String COLUMN_DESCRIPTION = "description";
     private static final String COLUMN_DATE = "date";
+
+    int cursor_row = 0;
+
+    ArrayList<Task> tasks = new ArrayList<Task>();
+    ArrayList<String> to_string = new ArrayList<>();
 
     public DBHelper(Context context){
         super(context, DATABASE_NAME, null, DATABASE_VER);
@@ -52,8 +58,6 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public void insertTask(String description, String date){
-
-
         // getting an instance of the database to allow write operations
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -75,12 +79,16 @@ public class DBHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    public ArrayList<String> getTaskContext(){
+    public ArrayList<Task> getTaskContext(){
         // creating an array list that stores everything that is inside of the db
-        ArrayList<String> tasks = new ArrayList<String>();
 
-        // selecting the db's description field and its value
-        String selectQuery = String.format("SELECT %s FROM %s", COLUMN_DESCRIPTION, TABLE_TASK);
+        // selecting the db's id, description, and date value
+        String selectQuery = "SELECT " + COLUMN_ID + ", "
+                + COLUMN_DESCRIPTION + ", "
+                + COLUMN_DATE
+                + " FROM " + TABLE_TASK
+                + " ORDER BY " + COLUMN_DESCRIPTION + " ASC"
+                + ", " + COLUMN_ID + " ASC";
 
         // getting an instance of the db to allow us to read the data
         SQLiteDatabase db = this.getReadableDatabase();
@@ -94,7 +102,12 @@ public class DBHelper extends SQLiteOpenHelper {
 
         if(cursor.moveToFirst()){ // essentially means if cursor.movetofirst == true
             do{ // do the method
-                tasks.add(cursor.getString(0)); // the "method"
+                int id = cursor.getInt(0);
+                cursor_row = cursor.getPosition();
+                String description = cursor.getString(1);
+                String date = cursor.getString(2);
+                Task obj = new Task(id, description, date);
+                tasks.add(obj);
             }while(cursor.moveToNext()); // while this is true
         }
 
